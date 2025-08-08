@@ -1,5 +1,8 @@
 
 import { Header } from "./_components/layout/Header";
+import { MobileExploreSection } from "./_components/section/MobileExploreSection";
+import { HeroSection } from "./_components/section/HeroSection";
+import { PartnersSection } from "./_components/section/PartnersSection";
 import { Footer } from "./_components/layout/Footer";
 
 export default function Home() {
@@ -9,6 +12,12 @@ export default function Home() {
       <div className="box-border hidden outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)]"></div>
 
       <Header />
+
+      <div className="box-border outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)]">
+        <MobileExploreSection />
+        <HeroSection />
+        <PartnersSection />
+      </div>
 
 
 
