@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Openedu Platform
 
-## Getting Started
+## About  
+**OE‑NRP** (Open Education) is a modern EdTech platform that integrates blockchain, AI automation, gamification, and trustless collaboration. The goal of the platform is to support education, optimize teaching and learning experiences, and expand the EduFi market.
 
-First, run the development server:
+### Recommended system
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Nodejs: >= 20 [https://nodejs.org/en/download/package-manager](https://nodejs.org/en/download/package-manager)
+  - Recommend: use [Fast node manager](https://github.com/Schniz/fnm)
+- npm: latest version [https://pnpm.io/installation](https://npm.io/installation)
+- Editor: `vscode`, `cursor`.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Structure 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+├───public 
+└───src
+    └───app
+        ├───_components
+        │   ├───layout
+        │   └───section             
+        └───_data                   # Mock up data course, navigation, partners
+  ...
+```
 
-## Learn More
+### Scripts
 
-To learn more about Next.js, take a look at the following resources:
+> Workspace is always root repo.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sh
+npm install
+```
 
-## Deploy on Vercel
+- Add packages
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```sh
+npm add {npm_package} 
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Run dev
+
+```sh
+npm run dev
+```
+
+- Run build
+
+```sh
+npm run build
+```
+
+- Run lint
+
+```sh
+npm lint
+```
+
+## Branch Types
+
+### feat/
+New features or functionality additions
+- Example: `feat/#123-user-authentication`
+
+### fix/
+Bug fixes and issue resolutions
+- Example: `fix/#456-login-error`
+
+### chore/
+Maintenance tasks, dependency updates, or build process changes
+- Example: `chore/#789-update-dependencies`
+
+## Branch Creation
+
+Create a new branch from `dev`:
+
+```bash
+# Checkout dev branch
+git checkout dev
+
+# Rebase latest changes
+git pull origin --rebase dev
+
+# Create and switch to new branch
+git checkout -b feat/#123-user-authentication
+```
+
+After completing your work, create a pull request to merge your branch into `dev`:
+- Assign team members for peer review
+- Assign team leader for final review and approval
+- Ensure all reviews are completed before merging
+
+## Branch Naming Convention
+
+Format: `<type>/#<ticket-number>-<summary>`
+
+Examples:
+- `feat/#123-user-registration`
+- `fix/#456-payment-validation`
+- `chore/#789-eslint-config`
+
+## Deploy to Production
+
+Create a pull request to merge `dev` into `main` for production deployment
+
+Using github CI/CD to deploy from branch `main`
+
+
+## License  
+This project is licensed under the **MIT License** (or replace with the license of your choice). See the `LICENSE` file for details.
