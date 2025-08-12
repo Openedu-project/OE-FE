@@ -1,9 +1,17 @@
-
 import { Header } from "./_components/layout/Header";
 import { MobileExploreSection } from "./_components/section/MobileExploreSection";
 import { HeroSection } from "./_components/section/HeroSection";
 import { PartnersSection } from "./_components/section/PartnersSection";
 import { Footer } from "./_components/layout/Footer";
+import { FeaturedCoursesSection } from "./_components/section/FeaturedCoursesSection";
+import { CertificateSection } from "./_components/section/CertificateSection";
+import { AIAgentSection } from "./_components/section/AIAgentSection";
+import { AffiliateSection } from "./_components/section/AffiliateSection";
+import { InstructorsSection } from "./_components/section/InstructorsSection";
+import { NewsSection } from "./_components/section/NewsSection";
+import { BusinessPartnersSection } from "./_components/section/BusinessPartnersSection";
+import { HackathonSection } from "./_components/section/HackathonSection";
+import { CTASection } from "./_components/section/CTASection";
 
 export default function Home() {
   return (
@@ -19,7 +27,15 @@ export default function Home() {
         <PartnersSection />
       </div>
 
-
+      <FeaturedCoursesSection />
+      <CertificateSection />
+      <AIAgentSection />
+      <AffiliateSection />
+      <InstructorsSection />
+      <NewsSection />
+      <BusinessPartnersSection />
+      <HackathonSection />
+      <CTASection />
 
       <Footer />
 
