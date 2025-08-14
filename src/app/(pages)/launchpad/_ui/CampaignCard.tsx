@@ -56,7 +56,7 @@ export function CampaignCard({ campaign, variant, index }: CampaignCardProps) {
           role="progressbar"
           className="relative bg-slate-100 box-border h-2 outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] w-full overflow-hidden mb-4 rounded-[3.35544e+07px]"
         >
-          <div className={`tw_cls_${61 + index}`}></div>
+          <div className="bg-blue-700 box-border basis-[0%] grow h-full outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] translate-x-[-33.3%] w-full"></div>
         </div>
         <div className="items-center box-border gap-x-2 flex justify-between leading-6 outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] gap-y-2">
           <p className="box-border outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)]">
