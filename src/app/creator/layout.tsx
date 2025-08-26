@@ -64,30 +64,6 @@ export default function CreatorDashboardPage({ children }: { children: React.Rea
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          {/* Top Navigation Tabs */}
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="flex space-x-8">
-              {topNavItems.map((item, index) => (
-                <button
-                  key={index}
-                  className={`text-sm font-medium pb-2 border-b-2 transition-colors ${
-                    item.active
-                      ? "text-blue-600 border-blue-600"
-                      : "text-gray-500 border-transparent hover:text-gray-700"
-                  }`}
-                  onClick={() => setActiveTab(item.label)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Page Title */}
-          <div className="bg-white px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          </div>
-
           {/* Main Content Area */}
           {children}
         </div>
