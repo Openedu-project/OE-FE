@@ -6,6 +6,7 @@ import { useLoginUser } from "../_services/authService"
 import { LoginRequest } from "../_types/auth"
 import { toast } from "sonner"
 import { ExternalToast } from "sonner"
+import { useForm } from "react-hook-form"
 
 interface FormData {
   email: string
@@ -18,38 +19,40 @@ export default function LoginPage() {
   
   const externalToast : ExternalToast = { position: "top-center", style: { fontSize: "1rem" } }
 
-  const [formData, setFormData] = useState<FormData>({
-    email: "",
-    password: "",
+  // const [formData, setFormData] = useState<FormData>({
+  //   email: "",
+  //   password: "",
+  // })
+
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+    reset,   
+  } = useForm<FormData>({
+    defaultValues: { email: "", password: "" },
   })
+
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    console.log("Login attempt:", formData)
+  const onSubmit = async (fd: FormData) => { 
+    console.log("Login attempt:", fd)
   
     const payload: LoginRequest = {
-      email: formData.email,
-      password: formData.password,
+      email: fd.email,
+      password: fd.password,
     }
     
     try {      
       await handleLogin(payload) // server auto save token to cookie if login success
       toast.info("Login successful", externalToast)
 
+      reset()
       router.push("/")
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? "Login failed";
       toast.error(msg, externalToast)
-    }    
+    }
   }
 
   const togglePasswordVisibility = () => {
@@ -72,7 +75,7 @@ export default function LoginPage() {
               Login
             </h1>
 
-            <form className="box-border outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)]" onSubmit={handleSubmit}>
+            <form className="box-border outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)]" onSubmit={handleSubmit(onSubmit)}>
               <div className="box-border outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] mb-4">
                 <label className="text-sm font-medium items-center box-border flex leading-[14px] outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] mb-2">
                   <div className="box-border outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)]">
@@ -91,11 +94,9 @@ export default function LoginPage() {
                   </div>
                   <input
                     placeholder="Enter your email"
-                    type="email"
-                    value={formData.email}
-                    name="email"
+                    type="email"                                        
                     className="text-sm box-border flex h-10 leading-5 outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] w-full border border-slate-200 pl-10 pr-3 py-2 rounded-md border-solid"
-                    onChange={handleInputChange}
+                    {...register("email")}
                     required
                   />
                 </div>
@@ -120,11 +121,9 @@ export default function LoginPage() {
                     </div>
                     <input
                       placeholder="Enter your password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      name="password"
+                      type={showPassword ? "text" : "password"}                      
                       className="text-sm box-border flex h-10 leading-5 outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] w-full border border-slate-200 px-10 py-2 rounded-md border-solid"
-                      onChange={handleInputChange}
+                      {...register("password")}
                       required
                     />
                   </div>
