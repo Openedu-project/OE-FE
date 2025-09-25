@@ -1,17 +1,48 @@
 "use client"
 
 import React, { useState } from "react"
-import { Eye, EyeOff, User, Mail, Lock } from "lucide-react"
+import { Eye, EyeOff, User, Mail, Lock, Info } from "lucide-react"
+import { useRouter } from "next/navigation"
+import z from "zod"
+import { useRegisterUser } from "../_services/authService"
+import { SignupRequest } from "../_types/auth"
+import { ExternalToast, toast } from "sonner"
 interface FormData {
+  name: string
   email: string
   password: string
+  confirmPassword: string
 }
 
+export const formDataSchema = z.object({
+  name: z.string().trim().min(3, "Name must be at least 3 characters"),
+  email: z.email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string()
+}).superRefine((val, ctx) => {
+  if (val.confirmPassword !== val.password) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["confirmPassword"],
+      message: "Confirm password does not match",
+    });
+  }
+}) satisfies z.ZodType<FormData>
+
 export default function SignUpPage() {
-  const [formData, setFormData] = useState<FormData>({
+  const router = useRouter()
+  const { trigger: handleRegister, isMutating: isProcessing } = useRegisterUser()
+
+  const defaultFormData : FormData = {
+    name: "",
     email: "",
     password: "",
-  })
+    confirmPassword: "",
+  }
+
+  const externalToast : ExternalToast = { position: "top-center", style: { fontSize: "1rem" } }
+  
+  const [formData, setFormData] = useState<FormData>(defaultFormData)  
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -24,10 +55,78 @@ export default function SignUpPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleValidate = (): FormData | null => {
+    const parsed = formDataSchema.safeParse(formData)
+    if (!parsed.success) {
+      const newErrorData: FormData = { ...defaultFormData }
+      parsed.error.issues.forEach((issue) => {
+        const fieldName = issue.path.join(".") as keyof FormData
+        if (fieldName in newErrorData) {
+          newErrorData[fieldName] = issue.message
+        }
+      })
+      return newErrorData
+    }
+    return null
+  }
+
+  const handleInterfaceError = (error : FormData) => {
+    console.log(error)
+    // Collect all error messages from the error object (FormData)
+    const errorMessages = Object.values(error).filter(Boolean)
+    if (errorMessages.length > 0) {        
+      toast.error(errorMessages.join("\n"), externalToast)
+      Object.entries(error).filter((val) => val[1]).forEach((val) => {
+        const element = document.getElementById("signup-" + val[0]) as HTMLInputElement | null;
+        if (element) {            
+          if (!element.dataset.originalBorder) {
+            element.dataset.originalBorder = element.style.border || ""
+          }
+          element.style.border = " 4px solid red"
+        }
+      });        
+    }    
+  }
+
+  const handleResetInterfaceError = () => {
+    Object.keys(defaultFormData).forEach((key) => {
+      const element = document.getElementById("signup-" + key) as HTMLInputElement | null;
+      if (element && element.dataset.originalBorder !== undefined) {        
+        element.style.border = element.dataset.originalBorder
+        
+        delete element.dataset.originalBorder
+      }
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("Login attempt:", formData)
-    // Handle login logic here
+    console.log("Register attempt:", formData)
+
+    handleResetInterfaceError()
+    
+    // Handle register logic here
+    const error = handleValidate()
+    if (error !== null) {
+      handleInterfaceError(error)
+      return 
+    }    
+
+    const payload: SignupRequest = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+    }
+
+    try {
+      await handleRegister(payload)
+      toast.info("Register successful, redirect to login", externalToast)
+
+      router.push("/login")
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? "Register failed";
+      toast.error(msg, externalToast)
+    } 
   }
 
   const togglePasswordVisibility = () => {
@@ -49,14 +148,18 @@ export default function SignUpPage() {
             <div className="w-full max-w-md bg-transparent">
               <h2 className="mb-6 text-center text-2xl font-bold text-blue-700">Sign Up</h2>
 
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 {/* Display Name */}
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
+                    id="signup-name"                   
+                    name="name"
                     type="text"
                     placeholder="Enter your display name"
                     className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    value={formData.name}
+                    onChange={handleInputChange}
                   />
                 </div>
 
@@ -64,19 +167,27 @@ export default function SignUpPage() {
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
+                    id="signup-email"
                     type="email"
+                    name="email"
                     placeholder="Enter your email"
-                    className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  />
+                    className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"                    
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />                  
                 </div>
 
                 {/* Password */}
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
+                    id="signup-password"
                     type={showPassword ? "text" : "password"}
+                    name="password"
                     placeholder="Enter your password"
                     className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    value={formData.password}
+                    onChange={handleInputChange}
                   />
                   <button
                     type="button"
@@ -91,9 +202,13 @@ export default function SignUpPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
+                    id="signup-confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
                     placeholder="Enter your confirm password"
-                    className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"                  
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
                   />
                   <button
                     type="button"
@@ -131,7 +246,7 @@ export default function SignUpPage() {
               {/* Login */}
               <p className="mt-4 text-center text-sm text-gray-600">
                 Already have an account?{" "}
-                <a href="#" className="text-blue-600 font-medium hover:underline">
+                <a href="/login" className="text-blue-600 font-medium hover:underline">
                   Login
                 </a>
               </p>

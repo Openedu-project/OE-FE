@@ -1,6 +1,11 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import React, { useState } from "react"
+import { useLoginUser } from "../_services/authService"
+import { LoginRequest } from "../_types/auth"
+import { toast } from "sonner"
+import { ExternalToast } from "sonner"
 
 interface FormData {
   email: string
@@ -8,6 +13,11 @@ interface FormData {
 }
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { trigger: handleLogin, isMutating: isProcessing } = useLoginUser()
+  
+  const externalToast : ExternalToast = { position: "top-center", style: { fontSize: "1rem" } }
+
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -22,10 +32,24 @@ export default function LoginPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     console.log("Login attempt:", formData)
-    // Handle login logic here
+  
+    const payload: LoginRequest = {
+      email: formData.email,
+      password: formData.password,
+    }
+    
+    try {      
+      await handleLogin(payload) // server auto save token to cookie if login success
+      toast.info("Login successful", externalToast)
+
+      router.push("/")
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? "Login failed";
+      toast.error(msg, externalToast)
+    }    
   }
 
   const togglePasswordVisibility = () => {
