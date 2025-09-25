@@ -48,7 +48,7 @@ export default function LoginPage() {
       toast.info("Login successful", externalToast)
 
       reset()
-      router.push("/")
+      // router.push("/")
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? "Login failed";
       toast.error(msg, externalToast)
@@ -149,11 +149,39 @@ export default function LoginPage() {
                 Forgot Your Password?
               </a>
 
-              <button
+              {/* <button
                 type="submit"
                 className="text-indigo-50 text-sm items-center bg-blue-700 inline-flex h-10 justify-center leading-5 outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] text-center text-nowrap w-full mb-4 px-4 py-2 rounded-md"
               >
                 Login
+              </button> */}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || isProcessing}
+                aria-disabled={isSubmitting || isProcessing}
+                aria-busy={isSubmitting || isProcessing}
+                className={[
+                  "text-indigo-50 text-sm items-center inline-flex h-10 justify-center leading-5",
+                  "outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] text-center text-nowrap w-full mb-4 px-4 py-2 rounded-md transition",
+                  (isSubmitting || isProcessing)
+                    ? "bg-blue-700/60 cursor-not-allowed"
+                    : "bg-blue-700 hover:bg-blue-800"
+                ].join(" ")}
+              >
+                {(isSubmitting || isProcessing) ? (
+                  <svg
+                    className="h-4 w-4 animate-spin opacity-70"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+                    <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  "Login"
+                )}
               </button>
 
               <div className="text-slate-500 text-sm box-border leading-5 outline-[oklab(0.136266_-0.00681703_-0.0357494_/_0.5)] text-center mb-4">
