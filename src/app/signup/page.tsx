@@ -7,6 +7,8 @@ import z from "zod"
 import { useRegisterUser } from "../_services/authService"
 import { SignupRequest } from "../_types/auth"
 import { ExternalToast, toast } from "sonner"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 interface FormData {
   name: string
   email: string
@@ -33,101 +35,56 @@ export default function SignUpPage() {
   const router = useRouter()
   const { trigger: handleRegister, isMutating: isProcessing } = useRegisterUser()
 
-  const defaultFormData : FormData = {
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  }
-
   const externalToast : ExternalToast = { position: "top-center", style: { fontSize: "1rem" } }
-  
-  const [formData, setFormData] = useState<FormData>(defaultFormData)  
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },    
+    reset,
+    getValues, // get each value in all fields
+  } = useForm<FormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+    resolver: zodResolver(formDataSchema),
+    mode: "onBlur",
+  })
+
+  const isAllEmpty =
+    Object.values(getValues()).every(v =>
+      typeof v === "string" ? v.trim() === "" : // empty string
+      Array.isArray(v)      ? v.length === 0 : // array empty
+      v == null // null or undefined
+    );
+
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
 
-  const handleValidate = (): FormData | null => {
-    const parsed = formDataSchema.safeParse(formData)
-    if (!parsed.success) {
-      const newErrorData: FormData = { ...defaultFormData }
-      parsed.error.issues.forEach((issue) => {
-        const fieldName = issue.path.join(".") as keyof FormData
-        if (fieldName in newErrorData) {
-          newErrorData[fieldName] = issue.message
-        }
-      })
-      return newErrorData
-    }
-    return null
-  }
-
-  const handleInterfaceError = (error : FormData) => {
-    console.log(error)
-    // Collect all error messages from the error object (FormData)
-    const errorMessages = Object.values(error).filter(Boolean)
-    if (errorMessages.length > 0) {        
-      toast.error(errorMessages.join("\n"), externalToast)
-      Object.entries(error).filter((val) => val[1]).forEach((val) => {
-        const element = document.getElementById("signup-" + val[0]) as HTMLInputElement | null;
-        if (element) {            
-          if (!element.dataset.originalBorder) {
-            element.dataset.originalBorder = element.style.border || ""
-          }
-          element.style.border = " 4px solid red"
-        }
-      });        
-    }    
-  }
-
-  const handleResetInterfaceError = () => {
-    Object.keys(defaultFormData).forEach((key) => {
-      const element = document.getElementById("signup-" + key) as HTMLInputElement | null;
-      if (element && element.dataset.originalBorder !== undefined) {        
-        element.style.border = element.dataset.originalBorder
-        
-        delete element.dataset.originalBorder
-      }
-    })
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    console.log("Register attempt:", formData)
-
-    handleResetInterfaceError()
-    
-    // Handle register logic here
-    const error = handleValidate()
-    if (error !== null) {
-      handleInterfaceError(error)
-      return 
-    }    
-
+  const onSubmit = async (fd: FormData) => {
     const payload: SignupRequest = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
+      name: fd.name,
+      email: fd.email,
+      password: fd.password,
     }
 
     try {
       await handleRegister(payload)
       toast.info("Register successful, redirect to login", externalToast)
-
+      
+      reset()
       router.push("/login")
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? "Register failed";
       toast.error(msg, externalToast)
-    } 
+    }
   }
+
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword)
@@ -148,47 +105,41 @@ export default function SignUpPage() {
             <div className="w-full max-w-md bg-transparent">
               <h2 className="mb-6 text-center text-2xl font-bold text-blue-700">Sign Up</h2>
 
-              <form className="space-y-4" onSubmit={handleSubmit}>
+              <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
                 {/* Display Name */}
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    id="signup-name"                   
-                    name="name"
+                  <input                      
                     type="text"
                     placeholder="Enter your display name"
                     className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    {...register("name")}
                   />
+                  {errors.name && <p className="text-red-600 text-sm mt-1 mb-[-0.65rem]">{errors.name.message}</p>}
                 </div>
 
                 {/* Email */}
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    id="signup-email"
+                  <input                    
                     type="email"
-                    name="email"
                     placeholder="Enter your email"
                     className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"                    
-                    value={formData.email}
-                    onChange={handleInputChange}
-                  />                  
+                    {...register("email")}
+                  />
+                  {errors.email && <p className="text-red-600 text-sm mt-1 mb-[-0.65rem]">{errors.email.message}</p>}
                 </div>
 
                 {/* Password */}
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    id="signup-password"
-                    type={showPassword ? "text" : "password"}
-                    name="password"
+                  <input                    
+                    type={showPassword ? "text" : "password"}                    
                     placeholder="Enter your password"
                     className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    {...register("password")}
                   />
+                  {errors.password && <p className="text-red-600 text-sm mt-1 mb-[-0.65rem]">{errors.password.message}</p>}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -201,15 +152,13 @@ export default function SignUpPage() {
                 {/* Confirm Password */}
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                  <input
-                    id="signup-confirmPassword"
+                  <input                    
                     type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
                     placeholder="Enter your confirm password"
                     className="w-full rounded-md border bg-white border-gray-300 py-2 pl-10 pr-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"                  
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
+                    {...register("confirmPassword")}
                   />
+                  {errors.confirmPassword && <p className="text-red-600 text-sm mt-1 mb-[-0.65rem]">{errors.confirmPassword.message}</p>}
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -227,11 +176,39 @@ export default function SignUpPage() {
                 />
 
                 {/* Submit Button */}
-                <button
+
+                {/* <button 
                   type="submit"
                   className="w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 transition"
+                  disabled={isAllEmpty || !isValid} 
+                > 
+                  Sign Up 
+                </button> */}
+                <button
+                  type="submit"
+                  disabled={isAllEmpty || !isValid || isSubmitting || isProcessing}
+                  aria-disabled={isAllEmpty || !isValid || isSubmitting || isProcessing}
+                  aria-busy={isSubmitting || isProcessing}
+                  className={[
+                    "w-full rounded-md py-2 text-white transition",
+                    (isSubmitting || isProcessing)
+                      ? "bg-blue-600/60 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700",
+                  ].join(" ")}
                 >
-                  Sign Up
+                  {(isSubmitting || isProcessing) ? (
+                    <svg
+                      className="h-4 w-4 animate-spin opacity-70"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                    </svg>
+                  ) : (
+                    "Sign Up"
+                  )}
                 </button>
               </form>
 
